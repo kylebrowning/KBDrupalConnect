@@ -1,5 +1,5 @@
 //
-//  KBDrupalConnect.h
+//  KBDrupalViews.h
 //
 // ***** BEGIN LICENSE BLOCK *****
 // Version: MPL 1.1/GPL 2.0
@@ -34,40 +34,23 @@
 // file under either the MPL or the GPL.
 //
 // ***** END LICENSE BLOCK *****
-#import <Foundation/Foundation.h>
 
-#define DRUPAL_API_KEY  @"4b2d7ef98d720386e0d2022842847404"
-#define DRUPAL_SERVICES_URL  @"http://demo.kylebrowning.com/services/plist"
-#define DRUPAL_DOMAIN @"testing" 
-#define DRUPAL_NC_SYSTEM @"DRUPALNCSYSTEM"
-#define DRUPAL_METHOD_DONE @"DRUPALMETHODDONE"
-#define DRUPAL_NODE_METHOD_DONE @"DRUPALNODEMETHODDONE"
-@interface KBDrupalConnect : NSObject {
-    NSDictionary *connResult;
-    NSMutableDictionary *params;
-    NSDictionary *myDict;
-    NSString *sessid;
-    NSString *method;
-    NSDictionary *userInfo;
-    BOOL isRunning;
-    NSTimer *mainTimer;
+
+#import "KBDrupalComment.h"
+
+
+@implementation KBDrupalComment
+- (id) init {
+    [super init];
+    return self;
 }
-@property (nonatomic, retain) NSDictionary *connResult;
-@property (nonatomic, retain) NSString *sessid;
-@property (nonatomic, retain) NSString *method;
-@property (nonatomic, retain) NSMutableDictionary *params;
-@property (nonatomic, retain) NSDictionary *userInfo;
-- (id) init;
-- (id) initWithUserInfo:(NSDictionary*)someUserInfo andSessId:(NSString*)sessId;
-- (void) runMethod;
-- (void) addParam:(id)value forKey:(NSString *)key;
-- (void) removeParam:(NSString *)key;
-- (void) connect;
-- (void) done:(id)results;
-- (void) loginWithUsername:(NSString*)userName andPassword:(NSString*)password;
-- (void) logout;
-- (void) connect;
-- (NSString *) buildParams;
-- (NSString *) genRandStringLength;
-- (NSString *)generateHash:(NSString *)inputString;
+//initWithUserInfo:(NSDictionary*)someUserInfo andSessId:(NSString*)sessId
+- (void) getComments:(NSString*)nid andStart:(NSString *)start andCount:(NSString *)count {
+    [self setMethod:@"comment.loadNodeComments"];
+    [self addParam:nid forKey:@"nid"];
+    [self addParam:start forKey:@"start"];
+    [self addParam:count forKey:@"count"];
+    [self runMethod];
+    
+}
 @end

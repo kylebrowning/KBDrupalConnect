@@ -37,6 +37,8 @@
 #import <CommonCrypto/CommonHMAC.h> //for kCCHmacAlgSHA256
 #import <CommonCrypto/CommonDigest.h> //for CC_SHA256_DIGEST_LENGTH
 #import "KBDrupalConnect.h"
+#import "ASIHTTPRequest.h"
+#import "ASIFormDataRequest.h"
 
 @implementation KBDrupalConnect
 @synthesize connResult, sessid, method, params, userInfo;
@@ -152,58 +154,52 @@
 }
 
 -(void) runMethod {
-    if(isRunning) {
-        if (mainTimer == nil) {
-            mainTimer = [NSTimer scheduledTimerWithTimeInterval:.5 target:self selector:@selector(runMethod) userInfo:nil repeats:NO];
-        } else {
-            [mainTimer invalidate];
-            mainTimer = [NSTimer scheduledTimerWithTimeInterval:.5 target:self selector:@selector(runMethod) userInfo:nil repeats:NO];
-        }
-    } else {
-        NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-        [nc addObserver:self selector:@selector(done:) name:DRUPAL_METHOD_DONE object:nil];
-        NSString *timestamp = [NSString stringWithFormat:@"%d", (long)[[NSDate date] timeIntervalSince1970]];
-        NSString *nonce = [self genRandStringLength];
-        [self removeParam:@"hash"];
-        [self addParam:DRUPAL_DOMAIN forKey:@"domain_name"];
-        [self removeParam:@"domain_name"];
-        [self removeParam:@"domain_time_stamp"];
-        [self removeParam:@"nonce"];
-        [self removeParam:@"sessid"];
-        NSString *hashParams = [NSString stringWithFormat:@"%@;%@;%@;%@",timestamp,DRUPAL_DOMAIN,nonce,[self method]];
-        [self addParam:[self generateHash:hashParams] forKey:@"hash"];
-        [self addParam:DRUPAL_DOMAIN forKey:@"domain_name"];
-        [self addParam:timestamp forKey:@"domain_time_stamp"];
-        [self addParam:nonce forKey:@"nonce"];
-        [self addParam:[self sessid] forKey:@"sessid"];
-        NSMutableURLRequest *theRequest=[NSMutableURLRequest requestWithURL:[NSURL URLWithString:DRUPAL_SERVICES_URL]
-                                                                cachePolicy:NSURLRequestUseProtocolCachePolicy
-                                                            timeoutInterval:60.0];
-        [theRequest setHTTPMethod:@"POST"];
-        NSString *httpBodyString = [[NSString alloc] initWithString:[self buildParams]];
-        NSData *myRequestData = [NSData dataWithBytes:[httpBodyString UTF8String] length:[httpBodyString length]];
-        [theRequest setHTTPBody:myRequestData];
-        NSURLConnection *theConnection=[[NSURLConnection alloc] initWithRequest:theRequest delegate:self];
-        if(!theConnection) {
-            NSLog(@"CONNETION FAILED!");
-        }
-        isRunning = YES;
+    NSString *timestamp = [NSString stringWithFormat:@"%d", (long)[[NSDate date] timeIntervalSince1970]];
+    NSString *nonce = [self genRandStringLength];
+    [self removeParam:@"hash"];
+    [self addParam:DRUPAL_DOMAIN forKey:@"domain_name"];
+    [self removeParam:@"domain_name"];
+    [self removeParam:@"domain_time_stamp"];
+    [self removeParam:@"nonce"];
+    [self removeParam:@"sessid"];
+    NSString *hashParams = [NSString stringWithFormat:@"%@;%@;%@;%@",timestamp,DRUPAL_DOMAIN,nonce,[self method]];
+    [self addParam:[self generateHash:hashParams] forKey:@"hash"];
+    [self addParam:DRUPAL_DOMAIN forKey:@"domain_name"];
+    [self addParam:timestamp forKey:@"domain_time_stamp"];
+    [self addParam:nonce forKey:@"nonce"];
+    [self addParam:[self sessid] forKey:@"sessid"];
+    
+    NSURL *url = [NSURL URLWithString:DRUPAL_SERVICES_URL];
+    ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
+    NSString *key;
+    for (key in [self params]) {
+        [request setPostValue:[[self params] objectForKey:key] forKey:key];
     }
-}
-
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    [connection release];
-    NSLog(@"Connection failed! Error - %@ %@",
-          [error localizedDescription],
-          [[error userInfo] objectForKey:NSErrorFailingURLStringKey]);
-}
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    NSString *returnDataAsString = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
-    NSDictionary *dictionary = [returnDataAsString propertyList];
+    NSLog(@"POST: ", [request postData]);
+    [request startSynchronous];
+    NSError *error = [request error];
+    NSString *response;
+    if (!error) {
+        response = [request responseString];
+        NSLog(@"%@", response);
+    }
+    NSDictionary *dictionary = [response propertyList];
     [self setConnResult:dictionary];
-    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-    [nc postNotificationName:DRUPAL_METHOD_DONE object:[self connResult]];
-    isRunning = NO;
+    if([[dictionary objectForKey:@"#method"] isEqualToString:@"system.connect"]) {
+        myDict = [dictionary objectForKey:@"#data"];
+        if(myDict != nil) {
+            [self setSessid:[myDict objectForKey:@"sessid"]];
+            [self setUserInfo:[myDict objectForKey:@"user"]];
+        }
+    }
+    if([[dictionary objectForKey:@"#method"] isEqualToString:@"user.login"]) {
+        myDict = [dictionary objectForKey:@"#data"];
+        if(myDict != nil) {
+            [self setSessid:[myDict objectForKey:@"sessid"]];
+            [self setUserInfo:[myDict objectForKey:@"user"]];
+        }
+    }
+
 }
 
 - (void) setMethod:(NSString *)aMethod {
@@ -242,7 +238,7 @@
     [params removeObjectForKey:key];
 }
 - (NSString *)description {
-    return [NSString stringWithFormat:@"%@, %@, %@, %@", userInfo, params, sessid, (isRunning ? @"YES" : @"NO")];
+    return [NSString stringWithFormat:@"%@, %@, %@, %@, %@", connResult, userInfo, params, sessid, (isRunning ? @"YES" : @"NO")];
 }
 - (void) dealloc {
     if (mainTimer != nil) {
