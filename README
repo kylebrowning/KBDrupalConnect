@@ -32,3 +32,6 @@ if(session == nil) {
 }
    KBDrupalComment *commentConnect = [[KBDrupalComment alloc] initWithUserInfo:[session userInfo] andSessId:[session sessid]];
     [commentConnect getComments:nid andStart:start andCount:count];
+
+TROUBLESHOOTING:
+If you are getting Access denied, or API Key not valid, double check that your key settings are setup correctly at admin/build/services/keys and double check that permissions are correct for your user and anonymous.
