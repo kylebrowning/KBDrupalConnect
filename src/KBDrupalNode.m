@@ -43,25 +43,6 @@
     return self;
 }
 
-- (void) done:(id)results{
-    [super done:results];
-    if([[[results object] objectForKey:@"#method"] isEqualToString:@"node.get"]) {
-        myDict = [[results object] objectForKey:@"#data"];
-        if(myDict != nil) {
-            [self setNid:[myDict objectForKey:@"nid"]];
-            [self setBody:[myDict objectForKey:@"body"]];
-        }
-    }
-    if([[[results object] objectForKey:@"#method"] isEqualToString:@"node.save"]) {
-        myDict = [[results object] objectForKey:@"#data"];
-        if(myDict != nil) {
-            //Nothing
-        }
-    }
-    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-    [nc removeObserver:self];
-    isRunning = NO;
-}
 -(id)nodeGet:(NSString *)anNid {
     [self setMethod:@"node.get"];
     [self addParam:anNid forKey:@"nid"];
@@ -90,6 +71,7 @@
     }
     [self addParam:[self serializedObject:node] forKey:@"node"];
     [self runMethod];
+    [node release];
     return self;
 }
 
@@ -116,6 +98,6 @@
 
 - (void) dealloc {
     [super dealloc];
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+  
 }
 @end

@@ -44,7 +44,7 @@
     [super init];
     return self;
 }
-//initWithUserInfo:(NSDictionary*)someUserInfo andSessId:(NSString*)sessId
+
 - (void) getComments:(NSString*)nid andStart:(NSString *)start andCount:(NSString *)count {
     [self setMethod:@"comment.loadNodeComments"];
     [self addParam:nid forKey:@"nid"];

@@ -42,4 +42,5 @@
 
 }
 - (id) init;
+- (void) getComments:(NSString*)nid andStart:(NSString *)start andCount:(NSString *)count;
 @end

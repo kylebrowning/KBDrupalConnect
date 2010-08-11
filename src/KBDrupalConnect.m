@@ -42,6 +42,10 @@
 
 @implementation KBDrupalConnect
 @synthesize connResult, sessid, method, params, userInfo;
+
+/*
+ * This init function will automatically connect and setup the session for communicaiton with drupal
+ */
 - (id) init {
     [super init];
     isRunning = NO;
@@ -153,9 +157,11 @@
     return randomString;
 }
 
+//This runs our method and actually gets a response from drupal
 -(void) runMethod {
     NSString *timestamp = [NSString stringWithFormat:@"%d", (long)[[NSDate date] timeIntervalSince1970]];
     NSString *nonce = [self genRandStringLength];
+    //removed because we have to regen this every call
     [self removeParam:@"hash"];
     [self addParam:DRUPAL_DOMAIN forKey:@"domain_name"];
     [self removeParam:@"domain_name"];
@@ -175,13 +181,11 @@
     for (key in [self params]) {
         [request setPostValue:[[self params] objectForKey:key] forKey:key];
     }
-    NSLog(@"POST: ", [request postData]);
     [request startSynchronous];
     NSError *error = [request error];
     NSString *response;
     if (!error) {
         response = [request responseString];
-        NSLog(@"%@", response);
     }
     NSDictionary *dictionary = [response propertyList];
     [self setConnResult:dictionary];
@@ -241,11 +245,11 @@
     return [NSString stringWithFormat:@"%@, %@, %@, %@, %@", connResult, userInfo, params, sessid, (isRunning ? @"YES" : @"NO")];
 }
 - (void) dealloc {
-    if (mainTimer != nil) {
-        [mainTimer invalidate];
-        [mainTimer release];
-        mainTimer = nil;
-    }
+    [connResult release];
+    [sessid release];
+    [method release];
+    [params release];
+    [userInfo release];
     [super dealloc];
 }
 @end
