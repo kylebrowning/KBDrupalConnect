@@ -8,9 +8,13 @@ UIKit.Framework
 CoreGraphics.framework
 CFNetwork.framework
 libz.1.2.3.dylib
+SystemConfiguration.framework
+MobileCoreServices.framework
+
+And Update KBDrupalConnect.h with the correct API_KEYS SERVICES_URL and DOMAIN
 
 USAGE:
-Update KBDrupalConnect.h with the correct API_KEYS SERVICES_URL and DOMAIN
+
 For use with views.
     KBDrupalConnect *session = [[KBDrupalConnect alloc] init];
     KBDrupalViews *views = [[KBDrupalViews alloc] initWithUserInfo:[session userInfo] andSessId:[session sessid]];
