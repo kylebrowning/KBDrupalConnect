@@ -58,6 +58,7 @@
 @property (nonatomic, retain) NSMutableDictionary *params;
 @property (nonatomic, retain) NSDictionary *userInfo;
 - (id) init;
+- (id) initWithSessId:(NSString*)aSessId;
 - (id) initWithUserInfo:(NSDictionary*)someUserInfo andSessId:(NSString*)sessId;
 - (void) runMethod;
 - (void) addParam:(id)value forKey:(NSString *)key;
